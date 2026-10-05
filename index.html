@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rastrea — Controle de Iscas e Tags</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E2338; --ink-2:#16324D; --slate:#5A6C82; --slate-light:#8C9AAD;
+    --steel:#2B6C93; --steel-light:#E4EEF3;
+    --amber:#C97A2B; --amber-light:#FBEEDE;
+    --green:#3D7A5A; --green-light:#E4F1E9;
+    --red:#B4432F; --red-light:#FBE7E2;
+    --mist:#F4F6F8; --paper:#FFFFFF; --line:#DFE4EA; --line-soft:#EBEEF2;
+    --font-ui:'Manrope',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--mist);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px;}
+
+  header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .posto-switcher{display:flex;gap:8px;align-items:center;}
+  .posto-switcher select{
+    font-family:var(--font-ui);font-size:12.5px;font-weight:600;color:var(--ink-2);
+    border:0.5px solid var(--line);background:var(--paper);border-radius:7px;padding:8px 12px;cursor:pointer;
+  }
+  .btn-ghost{
+    font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--steel);background:var(--steel-light);
+    border:none;border-radius:7px;padding:8px 12px;cursor:pointer;white-space:nowrap;
+  }
+  .btn-ghost:hover{opacity:.85;}
+  .brand-mark{width:34px;height:34px;background:var(--ink);color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:600;}
+  h1{font-size:18px;font-weight:800;}
+  .subtitle{font-size:12.5px;color:var(--slate);margin-top:2px;}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--paper);border:0.5px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .kpi.total{background:var(--ink);border-color:var(--ink);}
+  .kpi-label{font-size:11.5px;color:var(--slate);font-weight:600;}
+  .kpi.total .kpi-label{color:#9FB3C8;}
+  .kpi-value{font-family:var(--font-mono);font-size:24px;font-weight:600;margin-top:6px;}
+  .kpi.total .kpi-value{color:#fff;}
+  .kpi-foot{font-size:10.5px;color:var(--slate-light);margin-top:3px;}
+  .kpi.total .kpi-foot{color:#7C93AB;}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .panel{background:var(--paper);border:0.5px solid var(--line);border-radius:10px;overflow:hidden;}
+  .panel-head{padding:14px 18px;border-bottom:0.5px solid var(--line-soft);}
+  .panel-head h3{font-size:13.5px;font-weight:700;}
+  .panel-head p{font-size:11.5px;color:var(--slate);margin-top:2px;}
+  .panel-body{padding:16px 18px;}
+
+  label{display:block;font-size:11.5px;font-weight:600;color:var(--slate);margin-bottom:5px;margin-top:12px;}
+  label:first-of-type{margin-top:0;}
+  .radio-row{display:flex;gap:8px;}
+  .radio-opt{flex:1;position:relative;}
+  .radio-opt input{position:absolute;opacity:0;inset:0;cursor:pointer;}
+  .radio-opt span{
+    display:block;text-align:center;font-size:12.5px;font-weight:600;padding:8px;border-radius:7px;
+    border:0.5px solid var(--line);color:var(--slate);cursor:pointer;
+  }
+  .radio-opt input:checked + span{background:var(--steel);border-color:var(--steel);color:#fff;}
+  textarea, .field{
+    width:100%;font-family:var(--font-mono);font-size:12.5px;border:0.5px solid var(--line);
+    border-radius:7px;padding:9px 12px;background:var(--mist);color:var(--ink);resize:vertical;
+  }
+  input.field{font-family:var(--font-ui);}
+  textarea{min-height:76px;}
+  textarea:focus, .field:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 1px var(--steel);}
+  .hint{font-size:10.5px;color:var(--slate-light);margin-top:4px;}
+  .btn{
+    margin-top:14px;width:100%;font-family:var(--font-ui);font-size:13px;font-weight:700;
+    padding:10px;border-radius:7px;border:none;cursor:pointer;transition:opacity .12s;
+  }
+  .btn:hover{opacity:.9;}
+  .btn.primary{background:var(--ink);color:#fff;}
+  .btn.danger{background:var(--red);color:#fff;}
+  .feedback{font-size:11.5px;margin-top:10px;padding:8px 10px;border-radius:6px;display:none;}
+  .feedback.show{display:block;}
+  .feedback.ok{background:var(--green-light);color:var(--green);}
+  .feedback.warn{background:var(--amber-light);color:var(--amber);}
+
+  .table-panel{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:start;}
+  .filter-row{display:flex;gap:8px;padding:14px 18px;border-bottom:0.5px solid var(--line-soft);flex-wrap:wrap;}
+  .filter-row select, .filter-row input{
+    font-family:var(--font-ui);font-size:12px;border:0.5px solid var(--line);border-radius:7px;
+    padding:7px 10px;background:var(--mist);color:var(--ink-2);
+  }
+  .filter-row input{flex:1;min-width:140px;font-family:var(--font-mono);}
+
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.4px;color:var(--slate-light);font-weight:700;padding:0 18px 9px;border-bottom:0.5px solid var(--line);}
+  tbody td{padding:9px 18px;border-bottom:0.5px solid var(--line-soft);vertical-align:middle;}
+  tbody tr{cursor:pointer;}
+  tbody tr:hover{background:var(--mist);}
+  tbody tr.selected{background:var(--steel-light);}
+  tbody tr:last-child td{border-bottom:none;}
+  .id-cell{font-family:var(--font-mono);font-weight:600;color:var(--ink-2);}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;}
+  .pill::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;}
+  .pill.isca{background:var(--steel-light);color:var(--steel);}
+  .pill.tag{background:#EFE7F6;color:#6E4A96;}
+  .pill.nova{background:var(--green-light);color:var(--green);}
+  .pill.usada{background:var(--amber-light);color:var(--amber);}
+  .pill.estoque{background:var(--green-light);color:var(--green);}
+  .pill.baixada{background:var(--line-soft);color:var(--slate);}
+  .link-btn{font-size:11px;font-weight:700;color:var(--red);background:none;border:none;cursor:pointer;padding:0;}
+  .link-btn:hover{text-decoration:underline;}
+  .empty-row td{color:var(--slate-light);text-align:center;padding:26px;font-size:12.5px;}
+
+  .hist-empty{padding:40px 20px;text-align:center;color:var(--slate-light);font-size:12.5px;}
+  .hist-item-id{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--ink);}
+  .hist-item-meta{font-size:11.5px;color:var(--slate);margin-top:3px;margin-bottom:14px;}
+  .hist-event{display:flex;gap:10px;padding:10px 0;border-top:0.5px solid var(--line-soft);}
+  .hist-event:first-child{border-top:none;}
+  .hist-dot{width:7px;height:7px;border-radius:50%;background:var(--steel);margin-top:5px;flex-shrink:0;}
+  .hist-text{font-size:12.5px;font-weight:600;}
+  .hist-date{font-family:var(--font-mono);font-size:10.5px;color:var(--slate-light);margin-top:2px;}
+  .hist-detail{font-size:11.5px;color:var(--slate);margin-top:2px;}
+
+  @media (max-width:920px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .grid-2, .table-panel{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">RT</div>
+      <div>
+        <h1>Controle de iscas e tags</h1>
+        <div class="subtitle">Estoque isolado por posto · <span id="posto-atual-label">carregando...</span></div>
+      </div>
+    </div>
+    <div class="posto-switcher">
+      <select id="posto-select" onchange="onPostoChange()"></select>
+      <button class="btn-ghost" onclick="novoPosto()">+ Novo posto</button>
+    </div>
+  </header>
+
+  <div class="feedback warn" id="storage-banner" style="margin-bottom:16px;">
+    Este navegador/ambiente não suporta o salvamento automático. Os dados vão zerar ao recarregar a página — para uso contínuo, abra este arquivo dentro do Claude.
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Iscas novas</div><div class="kpi-value" id="kpi-isca-nova">0</div><div class="kpi-foot">em estoque</div></div>
+    <div class="kpi"><div class="kpi-label">Iscas usadas</div><div class="kpi-value" id="kpi-isca-usada">0</div><div class="kpi-foot">em estoque</div></div>
+    <div class="kpi"><div class="kpi-label">Tags novas</div><div class="kpi-value" id="kpi-tag-nova">0</div><div class="kpi-foot">em estoque</div></div>
+    <div class="kpi"><div class="kpi-label">Tags usadas</div><div class="kpi-value" id="kpi-tag-usada">0</div><div class="kpi-foot">em estoque</div></div>
+    <div class="kpi total"><div class="kpi-label">Total em estoque</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-foot" id="kpi-baixadas-foot">0 baixadas ao todo</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><h3>Entrada no estoque</h3><p>Cole os IDs (um por linha ou separados por vírgula) para dar entrada em massa</p></div>
+      <div class="panel-body">
+        <label>Tipo</label>
+        <div class="radio-row">
+          <label class="radio-opt"><input type="radio" name="add-tipo" value="isca" checked><span>Isca</span></label>
+          <label class="radio-opt"><input type="radio" name="add-tipo" value="tag"><span>Tag</span></label>
+        </div>
+        <label>Condição</label>
+        <div class="radio-row">
+          <label class="radio-opt"><input type="radio" name="add-cond" value="nova" checked><span>Nova</span></label>
+          <label class="radio-opt"><input type="radio" name="add-cond" value="usada"><span>Usada</span></label>
+        </div>
+        <label>IDs</label>
+        <textarea id="add-ids" placeholder="IS-00234&#10;IS-00235&#10;IS-00236"></textarea>
+        <div class="hint">Aceita quebra de linha, vírgula ou espaço como separador</div>
+        <button class="btn primary" onclick="addStock()">Adicionar ao estoque</button>
+        <div class="feedback" id="add-feedback"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Registrar saída / uso</h3><p>Digite os IDs que saíram do estoque e o que foi feito com eles</p></div>
+      <div class="panel-body">
+        <label>IDs</label>
+        <textarea id="remove-ids" placeholder="IS-00234, IS-00235"></textarea>
+        <label>O que foi feito</label>
+        <input class="field" id="remove-motivo" placeholder="Ex: instalada no veículo placa ABC-1234">
+        <button class="btn danger" onclick="removeStock()">Dar baixa no estoque</button>
+        <div class="feedback" id="remove-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-panel">
+    <div class="panel">
+      <div class="filter-row">
+        <input type="text" id="search-id" placeholder="Buscar por ID..." oninput="render()">
+        <select id="filter-tipo" onchange="render()">
+          <option value="">Todos os tipos</option>
+          <option value="isca">Iscas</option>
+          <option value="tag">Tags</option>
+        </select>
+        <select id="filter-cond" onchange="render()">
+          <option value="">Toda condição</option>
+          <option value="nova">Nova</option>
+          <option value="usada">Usada</option>
+        </select>
+        <select id="filter-status" onchange="render()">
+          <option value="">Todo status</option>
+          <option value="em_estoque">Em estoque</option>
+          <option value="baixada">Baixada</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th>ID</th><th>Tipo</th><th>Condição</th><th>Status</th><th>Entrada</th><th></th></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Histórico</h3><p>Clique em um item na tabela para ver o histórico completo</p></div>
+      <div class="panel-body" id="history-panel">
+        <div class="hist-empty">Nenhum item selecionado</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Armazenamento local: usa localStorage quando window.storage (ambiente Claude) não existe.
+  if (typeof window.storage === 'undefined') {
+    window.storage = {
+      async get(key){ const v = localStorage.getItem('rastrea:' + key); if (v === null) throw new Error('not found'); return { key, value: v }; },
+      async set(key, value){ localStorage.setItem('rastrea:' + key, value); return { key, value }; },
+      async delete(key){ localStorage.removeItem('rastrea:' + key); return { key, deleted: true }; }
+    };
+  }
+</script>
+<script>
+  const items = {};
+  let selectedId = null;
+  let storageOk = true;
+  let postos = [];
+  let postoAtual = null;
+
+  function slug(nome){
+    return nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'posto';
+  }
+
+  async function loadPostos(){
+    try{
+      const res = await window.storage.get('postos-lista', true);
+      if(res && res.value) postos = JSON.parse(res.value);
+    }catch(e){
+      postos = [];
+    }
+  }
+
+  async function savePostos(){
+    await window.storage.set('postos-lista', JSON.stringify(postos), true);
+  }
+
+  async function loadUltimoPosto(){
+    try{
+      const res = await window.storage.get('ultimo-posto', false);
+      return res && res.value ? res.value : null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  async function saveUltimoPosto(id){
+    try{ await window.storage.set('ultimo-posto', id, false); }catch(e){}
+  }
+
+  function itemsKey(){
+    return 'inventario-' + postoAtual;
+  }
+
+  async function loadItems(){
+    Object.keys(items).forEach(k => delete items[k]);
+    try{
+      const res = await window.storage.get(itemsKey(), true);
+      if(res && res.value) Object.assign(items, JSON.parse(res.value));
+    }catch(e){
+      // posto novo, ainda sem itens cadastrados
+    }
+  }
+
+  async function saveItems(){
+    if(!storageOk) return;
+    try{
+      await window.storage.set(itemsKey(), JSON.stringify(items), true);
+    }catch(e){
+      storageOk = false;
+      const banner = document.getElementById('storage-banner');
+      if(banner) banner.classList.add('show');
+    }
+  }
+
+  function renderPostoSelect(){
+    const select = document.getElementById('posto-select');
+    select.innerHTML = postos.map(p => `<option value="${p.id}" ${p.id === postoAtual ? 'selected' : ''}>${p.nome}</option>`).join('');
+    const atual = postos.find(p => p.id === postoAtual);
+    document.getElementById('posto-atual-label').textContent = atual ? atual.nome : '';
+  }
+
+  async function onPostoChange(){
+    postoAtual = document.getElementById('posto-select').value;
+    await saveUltimoPosto(postoAtual);
+    selectedId = null;
+    await loadItems();
+    renderPostoSelect();
+    render();
+  }
+
+  async function novoPosto(){
+    const nome = prompt('Nome do novo posto/PA (ex: PA-04 — Vitória):');
+    if(!nome || !nome.trim()) return;
+    const id = slug(nome.trim());
+    if(postos.some(p => p.id === id)){
+      alert('Já existe um posto com esse nome.');
+      return;
+    }
+    postos.push({ id, nome: nome.trim() });
+    await savePostos();
+    postoAtual = id;
+    await saveUltimoPosto(id);
+    selectedId = null;
+    await loadItems();
+    renderPostoSelect();
+    render();
+  }
+
+  function parseIds(raw){
+    return [...new Set(raw.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean))];
+  }
+
+  function nowStr(){
+    return new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function showFeedback(el, msg, type){
+    el.textContent = msg;
+    el.className = 'feedback show ' + type;
+  }
+
+  function addStock(){
+    const tipo = document.querySelector('input[name="add-tipo"]:checked').value;
+    const condicao = document.querySelector('input[name="add-cond"]:checked').value;
+    const raw = document.getElementById('add-ids').value;
+    const ids = parseIds(raw);
+    const fb = document.getElementById('add-feedback');
+
+    if(ids.length === 0){
+      showFeedback(fb, 'Cole ao menos um ID para adicionar.', 'warn');
+      return;
+    }
+
+    let added = 0, skipped = 0;
+    ids.forEach(id => {
+      if(items[id]){
+        skipped++;
+        return;
+      }
+      items[id] = {
+        id, tipo, condicao, status: 'em_estoque', entrada: nowStr(),
+        historico: [{ data: nowStr(), acao: 'Entrada no estoque', detalhe: `Cadastrada como ${condicao === 'nova' ? 'nova' : 'usada'}` }]
+      };
+      added++;
+    });
+
+    document.getElementById('add-ids').value = '';
+    showFeedback(fb, `${added} adicionados. ${skipped > 0 ? skipped + ' já existiam e foram ignorados.' : ''}`, added > 0 ? 'ok' : 'warn');
+    render();
+    saveItems();
+  }
+
+  function removeStock(){
+    const raw = document.getElementById('remove-ids').value;
+    const motivo = document.getElementById('remove-motivo').value.trim();
+    const ids = parseIds(raw);
+    const fb = document.getElementById('remove-feedback');
+
+    if(ids.length === 0){
+      showFeedback(fb, 'Digite ao menos um ID para dar baixa.', 'warn');
+      return;
+    }
+    if(!motivo){
+      showFeedback(fb, 'Descreva o que foi feito com o(s) item(ns) antes de dar baixa.', 'warn');
+      return;
+    }
+
+    let removed = 0, notFound = 0, already = 0;
+    ids.forEach(id => {
+      const item = items[id];
+      if(!item){ notFound++; return; }
+      if(item.status !== 'em_estoque'){ already++; return; }
+      item.status = 'baixada';
+      item.historico.push({ data: nowStr(), acao: 'Saída de uso', detalhe: motivo });
+      removed++;
+    });
+
+    document.getElementById('remove-ids').value = '';
+    document.getElementById('remove-motivo').value = '';
+    let msg = `${removed} baixados do estoque.`;
+    if(notFound > 0) msg += ` ${notFound} não encontrados.`;
+    if(already > 0) msg += ` ${already} já estavam baixados.`;
+    showFeedback(fb, msg, removed > 0 ? 'ok' : 'warn');
+    render();
+    saveItems();
+  }
+
+  function baixaRapida(id){
+    const motivo = prompt(`O que foi feito com ${id}?`);
+    if(motivo === null) return;
+    if(!motivo.trim()){ alert('Descreva o que foi feito antes de dar baixa.'); return; }
+    const item = items[id];
+    item.status = 'baixada';
+    item.historico.push({ data: nowStr(), acao: 'Saída de uso', detalhe: motivo.trim() });
+    render();
+    saveItems();
+  }
+
+  function selectItem(id){
+    selectedId = id;
+    render();
+  }
+
+  function renderKpis(){
+    const all = Object.values(items);
+    const emEstoque = all.filter(i => i.status === 'em_estoque');
+    const baixadas = all.filter(i => i.status === 'baixada').length;
+
+    const count = (tipo, cond) => emEstoque.filter(i => i.tipo === tipo && i.condicao === cond).length;
+
+    document.getElementById('kpi-isca-nova').textContent = count('isca','nova');
+    document.getElementById('kpi-isca-usada').textContent = count('isca','usada');
+    document.getElementById('kpi-tag-nova').textContent = count('tag','nova');
+    document.getElementById('kpi-tag-usada').textContent = count('tag','usada');
+    document.getElementById('kpi-total').textContent = emEstoque.length;
+    document.getElementById('kpi-baixadas-foot').textContent = `${baixadas} baixadas ao todo`;
+  }
+
+  function renderTable(){
+    const search = document.getElementById('search-id').value.trim().toLowerCase();
+    const fTipo = document.getElementById('filter-tipo').value;
+    const fCond = document.getElementById('filter-cond').value;
+    const fStatus = document.getElementById('filter-status').value;
+
+    let list = Object.values(items).sort((a,b) => b.entrada.localeCompare(a.entrada));
+    if(search) list = list.filter(i => i.id.toLowerCase().includes(search));
+    if(fTipo) list = list.filter(i => i.tipo === fTipo);
+    if(fCond) list = list.filter(i => i.condicao === fCond);
+    if(fStatus) list = list.filter(i => i.status === fStatus);
+
+    const tbody = document.getElementById('table-body');
+    if(list.length === 0){
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Nenhum item cadastrado ainda. Use o formulário de entrada acima.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(i => `
+      <tr class="${i.id === selectedId ? 'selected' : ''}" onclick="selectItem('${i.id}')">
+        <td class="id-cell">${i.id}</td>
+        <td><span class="pill ${i.tipo}">${i.tipo === 'isca' ? 'Isca' : 'Tag'}</span></td>
+        <td><span class="pill ${i.condicao}">${i.condicao === 'nova' ? 'Nova' : 'Usada'}</span></td>
+        <td><span class="pill ${i.status === 'em_estoque' ? 'estoque' : 'baixada'}">${i.status === 'em_estoque' ? 'Em estoque' : 'Baixada'}</span></td>
+        <td class="id-cell" style="font-weight:400;color:var(--slate);">${i.entrada}</td>
+        <td>${i.status === 'em_estoque' ? `<button class="link-btn" onclick="event.stopPropagation(); baixaRapida('${i.id}')">Dar baixa</button>` : ''}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderHistory(){
+    const panel = document.getElementById('history-panel');
+    if(!selectedId || !items[selectedId]){
+      panel.innerHTML = `<div class="hist-empty">Nenhum item selecionado</div>`;
+      return;
+    }
+    const item = items[selectedId];
+    panel.innerHTML = `
+      <div class="hist-item-id">${item.id}</div>
+      <div class="hist-item-meta">
+        <span class="pill ${item.tipo}">${item.tipo === 'isca' ? 'Isca' : 'Tag'}</span>
+        <span class="pill ${item.condicao}">${item.condicao === 'nova' ? 'Nova' : 'Usada'}</span>
+        <span class="pill ${item.status === 'em_estoque' ? 'estoque' : 'baixada'}">${item.status === 'em_estoque' ? 'Em estoque' : 'Baixada'}</span>
+      </div>
+      ${item.historico.slice().reverse().map(h => `
+        <div class="hist-event">
+          <div class="hist-dot"></div>
+          <div>
+            <div class="hist-text">${h.acao}</div>
+            <div class="hist-date">${h.data}</div>
+            <div class="hist-detail">${h.detalhe}</div>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  function render(){
+    renderKpis();
+    renderTable();
+    renderHistory();
+  }
+
+  async function init(){
+    if(typeof window.storage === 'undefined'){
+      storageOk = false;
+      document.getElementById('storage-banner').classList.add('show');
+      postos = [{ id: 'local', nome: 'Local (não sincronizado)' }];
+      postoAtual = 'local';
+      renderPostoSelect();
+      render();
+      return;
+    }
+
+    await loadPostos();
+
+    if(postos.length === 0){
+      const nome = prompt('Nenhum posto cadastrado ainda. Nome do primeiro posto/PA:', 'Matriz');
+      const nomeFinal = (nome && nome.trim()) ? nome.trim() : 'Matriz';
+      const id = slug(nomeFinal);
+      postos = [{ id, nome: nomeFinal }];
+      await savePostos();
+    }
+
+    const ultimo = await loadUltimoPosto();
+    postoAtual = (ultimo && postos.some(p => p.id === ultimo)) ? ultimo : postos[0].id;
+
+    renderPostoSelect();
+    await loadItems();
+    render();
+  }
+
+  init();
+</script>
+</body>
+</html>
